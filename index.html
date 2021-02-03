@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" type="image/png" href="ico.png" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
     <title>Game of Life</title>
     <style>
         body {
@@ -12,16 +15,50 @@
             padding: 0;
             overflow: hidden;
         }
-        /*canvas {
-            width: 100%;
-            height: 100%;
-        }*/
     </style>
 </head>
 
 <body>
     <canvas id="renderCanvas"></canvas>
-    <script src="main.js"></script>
+    <div id="home">
+        <h1>Game of Life</h1>
+        <p id="launch">Random Generation</p>
+        <p id="newgrid">New Empty Grid</p>
+        <p id="upl2">Load a File</p>
+    </div>
+    <div id="setnew">
+        <h2>New Grid</h2>
+        <h3>Name of the grid :</h3><br/>
+        <input id="name" type="text" value="NewGrid" />
+        <h3>Size of the grid :</h3><br/>
+        <div id="D">
+            <input id="x" type="text" />
+            <p>X</p>
+            <input id="y" type="text" />
+        </div>
+        <p id="go">Go !</p>
+    </div>
+    <p id="loading">Loading...</p>
+    <p id="steps"></p>
+    <div id="UI">
+        <div id="upload">
+            <p>Load a File</p>
+            <form enctype="multipart/form-data" hidden>
+                <input id="upl" type=file accept="text/html" name="files[]" size=30>
+            </form>
+        </div>
+        <div id="controls">
+            <p id="previous">&lt;</p>
+            <div id="pause"><img src="pause.png " /></div>
+            <p id="next">&gt;</p>
+        </div>
+        <div id="download">
+            <a id="dl" href="" download="Config.gol">
+                <p>Download</p>
+            </a>
+        </div>
+    </div>
+    <script src="main.js "></script>
 </body>
 
 </html>

@@ -12,14 +12,6 @@ function initializeMatrix(width, height) {
         tab[i] = []
         for (let j = 0; j < height; j++) {
             tab[i][j] = randomBool(4);
-            /*tab[i][j] = false;
-            if (i == 2 && j == 2) tab[i][j] = true;
-            if (i == 3 && j == 1) tab[i][j] = true;
-            if (i == 3 && j == 2) tab[i][j] = true;
-            if (i == 4 && j == 1) tab[i][j] = true;
-            if (i == 4 && j == 2) tab[i][j] = true;
-            if (i == 5 && j == 1) tab[i][j] = true;*/
-
         }
     }
     return tab;
@@ -30,36 +22,55 @@ var canvas = document.getElementById("renderCanvas");
 var ctx = canvas.getContext("2d");
 ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
+canvas.style.zIndex = 1;
+ctx.fillStyle = "blue";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-const RES = [Math.round(window.innerWidth / 10), Math.round(window.innerHeight / 10)];
-const scale = 10;
+var scale = 10;
+var RES = [Math.round(ctx.canvas.width / scale), Math.round(ctx.canvas.height / scale)];
+$("#x").val(Math.round(ctx.canvas.width / scale));
+$("#y").val(Math.round((ctx.canvas.height * .7) / scale));
+//var RES = [Math.round(ctx.canvas.width / scale), Math.round(ctx.canvas.height / scale)];
 var diff = .7;
-var fps = 30;
-
+var fps = 15;
+interval = setInterval(updateMatrix, 1000 / fps);
 var MATRIX = initializeMatrix(RES[0], RES[1]);
+var History = [MATRIX];
+var steps = 0;
+
+var GridOn = false;
 
 function updateCanvas() {
-    for (let i = 0; i < RES[0]; i++) {
-        for (let j = 0; j < RES[1]; j++) {
-            ctx.fillStyle = "rgba(0, 0, 0, 1)";
-            ctx.fillRect(i * scale, j * scale, scale, scale);
-        }
-    }
+    if (GridOn) ctx.fillStyle = "blue";
+    else ctx.fillStyle = "black";
+
+    ctx.fillRect(0, 0, RES[0] * scale, RES[1] * scale);
     for (let i = 0; i < RES[0]; i++) {
         for (let j = 0; j < RES[1]; j++) {
             if (MATRIX[i][j]) {
                 ctx.fillStyle = "rgba(255, 255, 255, 1)";
-                ctx.fillRect(i * scale, j * scale, scale - diff, scale - diff);
+                ctx.fillRect(i * scale, j * scale, scale - diff * 2, scale - diff * 2);
 
             } else {
                 ctx.fillStyle = "rgba(0, 0, 0, 1)";
-                ctx.fillRect(i * scale, j * scale, scale, scale);
+                ctx.fillRect(i * scale, j * scale, scale - diff * 2, scale - diff * 2);
             }
 
         }
     }
-    updateMatrix();
 }
+
+$("canvas").on("click", e => {
+    MATRIX[Math.floor((e.pageX - $("canvas").offset().left) / scale)][Math.floor((e.pageY - $("canvas").offset().top) / scale)] = true;
+    updateCanvas();
+});
+
+$("canvas").on("contextmenu", e => {
+    e.preventDefault();
+    MATRIX[Math.floor((e.pageX - $("canvas").offset().left) / scale)][Math.floor((e.pageY - $("canvas").offset().top) / scale)] = false;
+    updateCanvas();
+});
+
 
 function updateMatrix() {
     var buffer = [];
@@ -73,7 +84,6 @@ function updateMatrix() {
         for (let j = 0; j < RES[1]; j++) {
             if (i > 0 && j > 0 && i < RES[0] - 1 && j < RES[1] - 1) {
                 let c = 0;
-                //if (i == 4 && j == 2) console.log(MATRIX[i - 1])
                 if (MATRIX[i][j - 1]) c += 1;
                 if (MATRIX[i][j + 1]) c += 1;
 
@@ -93,86 +103,146 @@ function updateMatrix() {
         }
     }
     MATRIX = buffer;
+    steps += 1;
+    $("#steps").html(steps);
+    History.push(MATRIX);
+    if (steps % 1 == 0) updateCanvas();
 }
 
-updateCanvas();
-var interval = setInterval(updateCanvas, 1000 / fps);
+function clearMatrix() {
+    for (let i = 0; i < RES[0]; i++) {
+        for (let j = 0; j < RES[1]; j++) {
+            MATRIX[i][j] = false;
+        }
+    }
+    History.push(MATRIX);
+    updateCanvas();
+}
+
+var interval;
 
 document.onkeydown = e => {
+    //e.preventDefault();
+    if (e.keyCode === 71) GridOn = !GridOn, updateCanvas();
     if (e.keyCode === 109 && fps > 0) fps -= 1;
     if (e.keyCode === 107 && fps < 60) fps += 1;
-    if (e.keyCode === 32 && fps == 0) fps = 30;
-    else if (e.keyCode === 32 && fps > 0) fps = 0;
-    if (e.keyCode === 13 && fps == 0) updateCanvas();
+    if (e.keyCode === 32) $("#pause").trigger("click");
+    if (e.keyCode === 67) clearMatrix();
+    if (e.keyCode === 37 && fps == 0) $("#previous").trigger("click");
+    if (e.keyCode === 39 && fps == 0) $("#next").trigger("click");
+}
+
+$("#pause").on("click", e => {
+    if (fps == 0) fps = 15, $("#pause img").attr("src", "pause.png");
+    else fps = 0, $("#pause img").attr("src", "play.png");
     clearInterval(interval);
-    if (fps > 0) interval = setInterval(updateCanvas, 1000 / fps);
-}
+    if (fps > 0) interval = setInterval(updateMatrix, 1000 / fps);
+});
 
-document.onkeyup = e => {
-
-}
-
-/*var canvas = document.getElementById("renderCanvas");
-var ctx = canvas.getContext("2d");
-
-var width = 1000;
-var height = 600;
-var scale = 5;
-var diff = .1;
-
-var grid = [];
-
-function setup() {
-    for (let i = 0; i < width; i++) {
-        grid[i] = [];
-        for (let j = 0; j < height; j++) {
-            if (getRandomInt(0, 10) < 7) grid[i][j] = 1;
-        }
+$("#previous").on("click", e => {
+    if (steps >= 1) {
+        steps -= 1;
+        $("#steps").html(steps);
+        MATRIX = History[steps];
+        updateCanvas();
     }
-}
-setup();
+});
 
-function draw() {
-    for (let i = 0; i < width; i++) {
-        for (let j = 0; j < height; j++) {
-            if (grid[i][j] == 1) {
-                ctx.fillStyle = "rgb(0, 0, 0)";
-            } else {
-                ctx.fillStyle = "rgb(255, 255, 255)";
+$("#next").on("click", e => updateMatrix());
+
+$("#dl").click(function() {
+    var now = RES[0].toString() + ";" + RES[1].toString() + ";" + MATRIX.toString();
+    this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(now);
+});
+
+
+RAW_DATA = "";
+
+function handleFileSelect(evt) {
+    $("#loading").fadeIn(100, e => {
+        var files = evt.target.files; // FileList object
+
+        // use the 1st file from the list
+        f = files[0];
+
+        var reader = new FileReader();
+
+        // Closure to capture the file information.
+        reader.onload = (function(theFile) {
+            return e => {
+                RAW_DATA = e.target.result;
+                RES[0] = RAW_DATA.split(";")[0];
+                RES[1] = RAW_DATA.split(";")[1];
+
+                scale = Math.min(window.innerWidth / RES[0], (window.innerHeight * .7) / RES[1]);
+                ctx.canvas.width = RES[0] * scale;
+                //ctx.canvas.left = (window.innerWidth - ctx.canvas.width) / 2
+
+                Line_MATRIX = RAW_DATA.split(";")[2];
+                MATRIX = initializeMatrix(RES[0], RES[1]);
+
+                for (let i = 0; i < RES[0]; i++) {
+                    for (let j = 0; j < RES[1]; j++) {
+                        MATRIX[i][j] = (/true/i).test(Line_MATRIX.split(",")[j % RES[1] + i * RES[1]]);
+                    }
+                }
+                History = [MATRIX];
+                steps = 0;
+                $("#loading").fadeOut();
+                launch();
+                updateCanvas();
+                if (fps != 0) $("#pause").trigger("click");
+            };
+        })(f);
+
+        // Read in the image file as a data URL.
+        reader.readAsText(f);
+    });
+}
+
+document.getElementById('upl').addEventListener('change', handleFileSelect, false);
+$("#upl2, #upload p").on("click", e => { $("#upl").trigger("click") });
+
+
+
+function launch() {
+    $("#home, #setnew").fadeOut(100, e => $("#UI").fadeIn());
+    ctx.canvas.height = window.innerHeight * .7;
+}
+
+function newGrid(width, height, empty = true) {
+    scale = Math.min(window.innerWidth / width, (window.innerHeight * .7) / height);
+    ctx.canvas.width = RES[0] * scale;
+    launch();
+    if (empty) {
+        GridOn = true;
+        $("#pause").trigger("click");
+        MATRIX = [];
+        for (let i = 0; i < width; i++) {
+            MATRIX[i] = [];
+            for (let j = 0; j < height; j++) {
+                MATRIX[i][j] = false;
             }
-            ctx.fillRect(i * scale, j * scale, scale - diff, scale - diff);
         }
-    }
-    update();
+    } else MATRIX = initializeMatrix(width, height);
+    History = [MATRIX];
+    steps = 0;
+    updateCanvas();
 }
 
-setInterval(draw, 3000);
+var emptyMode = true;
 
-function update() {
-    var buffer = [];
-    for (let i = 0; i < width; i++) {
-        buffer[i] = [];
-        for (let j = 0; j < height; j++) {
-            var c = 0;
-            c += getPos(i, j + 1);
-            c += getPos(i, j - 1);
-            c += getPos(i + 1, j + 1);
-            c += getPos(i + 1, j);
-            c += getPos(i + 1, j - 1);
-            c += getPos(i - 1, j + 1);
-            c += getPos(i - 1, j);
-            c += getPos(i - 1, j - 1);
-            buffer[i][j] = grid[i][j];
-            if (buffer[i][j] == 0 && c == 3) buffer[i][j] = 1;
-            else if (buffer[i][j] != 0 && (c < 2 || c > 3)) buffer[i][j] = 0;
-        }
-    }
-    grid = buffer;
-}
+$("#launch").on("click", e => {
+    emptyMode = false;
+    $("#home").fadeOut(100, e => $("#setnew").fadeIn());
+});
 
-function getPos(x, y) {
-    if (x > 0 && x < width && y > 0 && y < height) {
-        if (grid[x][y] != 0) return 1;
-    }
-    return 0;
-}*/
+$("#newgrid").on("click", e => {
+    emptyMode = true;
+    $("#home").fadeOut(100, e => $("#setnew").fadeIn());
+});
+
+$("#go").on("click", e => {
+    RES = [parseInt($("#x").val()), parseInt($("#y").val())];
+    newGrid(RES[0], RES[1], emptyMode);
+});
